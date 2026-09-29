@@ -69,4 +69,4 @@
 
 23. Sep 29, 2026 | 11:40 AM - 1:10 PM - Cleaned up the code, added comments to the most important parts, and rewrote the README and the video script (not included here).
 
-24. Sep 29, 2026 | 3:40 PM - 3:59 PM - Last user testing. Created the repository and uploaded it.
+24. Sep 29, 2026 | 3:40 PM - 4:21 PM - Last user testing. Created the repository and uploaded it.
