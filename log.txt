@@ -1,0 +1,72 @@
+1. Sep 21, 2026 | 6:10 PM - 7:35 PM - Figured out what the project should do (a tracker for courses and assignments) and looked into whether Firestore was a good fit compared to other databases.
+
+2. Sep 21, 2026 | 7:50 PM - 9:15 PM - Set up the Firebase project, turned on Firestore, and read through the docs to understand how collections, documents, and fields work.
+
+3. Sep 22, 2026 | 5:00 PM - 5:50 PM - Installed the firebase_admin package and downloaded the service account key from the Firebase Console.
+
+4. Sep 22, 2026 | 6:05 PM - 7:20 PM - Wrote dbAdminInitializer.py so the app loads the credentials, starts Firebase, and gives me a firestoreDB client to work with. Confirmed it connected.
+
+5. Sep 22, 2026 | 8:00 PM - 9:15 PM - Looked into how Firestore assigns document IDs and tried out collection.add() to make sure every new document gets its own unique ID automatically.
+
+6. Sep 23, 2026 | 4:30 PM - 6:30 PM - Wrote my first course functions (add, get, delete). At this point I was still building course IDs by counting the documents in the collection.
+
+7. Sep 23, 2026 | 7:15 PM - 9:00 PM - Ran into problems with the count-based IDs and replaced them. Here's what happened:
+    - count().get() returns a list of lists, so my indexing was wrong and crashed.
+    - Realized the IDs would collide after deleting a course, and that two requests at the same time could get the same ID.
+    - Switched to Firestore's automatic IDs with collection.add(), which also meant I no longer needed the check for an empty collection.
+
+8. Sep 24, 2026 | 3:00 PM - 4:30 PM - Planned how assignments should be stored. Compared a subcollection under each course with a separate top-level assignments collection, and went with the top-level one (with a courseId field) because I need to search across all courses by status and due date.
+
+9. Sep 24, 2026 | 5:15 PM - 8:00 PM - Wrote the assignment functions: add, update status, update due date, and delete. Had to make the due dates timezone-aware so Firestore stores and compares them properly.
+
+10. Sep 25, 2026 | 4:00 PM - 6:30 PM - Wrote the queries for reading assignments:
+    - All assignments for one course, sorted by due date.
+    - Assignments filtered by status.
+    - Assignments due within a number of days, leaving out the ones already done.
+    - Did the sorting and filtering in Python so I wouldn't have to set up composite indexes.
+
+11. Sep 25, 2026 | 7:15 PM - 8:35 PM - Made deleting a course also delete all of its assignments so nothing gets left behind. Used batched deletes to stay under Firestore's limit of 500 writes per batch.
+
+12. Sep 26, 2026 | 10:00 AM - 12:30 PM - Built the first text menu for adding courses and assignments, updating status and due dates, deleting, listing everything for a course, filtering by status, and seeing what's due soon.
+
+13. Sep 26, 2026 | 2:00 PM - 3:00 PM - Realized I had left out the points field, so I added it to assignments in the model, the input prompts, and the output.
+
+14. Sep 27, 2026 | 12:30 PM - 2:45 PM - Added a way to go back on every path of the menu:
+    - Created a GoBack exception that the main loop catches, so any prompt can send the user back to the menu.
+    - Numbered lists now have "0. Back," and text prompts accept "back."
+    - Going back from the assignment list takes you to the course list instead of all the way out.
+
+15. Sep 27, 2026 | 3:30 PM - 4:30 PM - Polished the user experience. Empty results now show a clear message, and the program waits for Enter so results don't disappear when the menu reprints.
+
+16. Sep 28, 2026 | 2:00 PM - 3:45 PM - Reorganized the project. Firestore code stays in the model folder, validation and logic moved into a new controllers folder, and app.py now only handles the menu.
+
+17. Sep 28, 2026 | 4:00 PM - 4:40 PM - Fixed a FileNotFoundError for dbKey.json by building the path with os.path and correcting the key file's name and location. Also added dbKey.json to .gitignore so my credentials don't get pushed to GitHub.
+
+18. Sep 28, 2026 | 5:00 PM - 7:00 PM - Made invalid input re-ask the same question instead of dumping the user back at the main menu:
+    - Wrote an askValid helper that loops until the answer passes validation.
+    - Rewrote the parsing functions (date, points, days) to raise clear, friendly error messages.
+    - Replaced the IndexError handling in the numbered lists with a proper range check.
+
+19. Sep 28, 2026 | 7:30 PM - 10:00 PM - Added editing for courses and assignments:
+    - Added update functions to the models that only change the fields being edited.
+    - Created edit prompts that show the current value and keep it if I just press Enter.
+    - Added menu options to edit a course's details and an assignment's title, description, and points.
+
+20. Sep 28, 2026 | 10:15 PM - Sep 29, 2026 | 12:45 AM - Started on user accounts. Researched Firebase Authentication versus building my own users collection, and went with my own because the Admin SDK can't verify passwords:
+    - Created a users collection where the username is the document ID, and used create() so Firestore rejects duplicate usernames.
+    - Wrote usersController.py with salted PBKDF2 password hashing, so real passwords are never stored.
+    - Built the register and login logic with the same error message for a wrong username or password.
+
+21. Sep 29, 2026 | 7:00 AM - 9:20 AM - Made every course and assignment belong to a user:
+    - Added a userId field to courses and assignments, and made every query filter by it.
+    - Added ownership checks in the controllers before any edit or delete.
+    - Added the login and create-account screens and a log out option to the menu.
+
+22. Sep 29, 2026 | 9:30 AM - 11:30 AM - Tested everything with two accounts against live Firestore data, and checked each change in the Firebase dashboard:
+    - Confirmed the second account can't see the first account's courses or assignments.
+    - Tried duplicate usernames, wrong passwords, bad dates, and bad numbers.
+    - Tested editing, status changes, and the cascade delete. Fixed the problems I found.
+
+23. Sep 29, 2026 | 11:40 AM - 1:10 PM - Cleaned up the code, added comments to the most important parts, and rewrote the README and the video script (not included here).
+
+24. Sep 29, 2026 | 3:40 PM - 3:59 PM - Last user testing. Created the repository and uploaded it.
