@@ -7,14 +7,14 @@ It is a command-line course and assignment tracker. Each user creates an account
 **How to use it**
 
 1. Create a Firebase project, enable Firestore, and download a service account key (Project settings > Service accounts > Generate new private key).
-2. Save the key as `model/dbKey.json` (do not commit it).
+2. Save the key as `model/dbKey.json` (did not commit it).
 3. Run `pip install firebase-admin`, then `python app.py` from the project root.
 4. Create an account or log in, then use the numbered menu to add, edit, and delete courses and assignments, update status and due dates, list a course's assignments, filter by status, and see what is due soon.
 5. Invalid input re-asks the question. Type `back` or choose `0` to go back.
 
 **Structure:** `app.py` (menu), `controllers/` (validation and logic), `model/` (Firestore access only).
 
-A 4-5 minute video demonstration (software running, code walkthrough, and cloud database view) is available on request. Contact me at luisalejandro632@gmail.com.
+A 30 minute video demonstration (software running, code walkthrough, and cloud database view) is available on request. Contact me at luisalejandro632@gmail.com.
 
 # Cloud Database
 
