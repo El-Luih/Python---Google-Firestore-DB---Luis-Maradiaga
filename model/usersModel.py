@@ -1,12 +1,14 @@
+# Firestore access for user accounts.
+# Username is the document ID, so lookups are fast and duplicate users are blocked.
+
 from google.api_core.exceptions import AlreadyExists
 from model.dbAdminInitializer import firestoreDB
 
 users = firestoreDB.collection('users')
 
 
+# Creates a new user only if the username is not already taken.
 def createUser(username, passwordHash, salt):
-    #Creates users/{username}. Returns False if that username already exists.
-    #create() (unlike set()) fails if the document exists, so Firestore itself guarantees usernames are unique, even if two people register at once.
     try:
         users.document(username).create({
             'username': username,
@@ -18,6 +20,7 @@ def createUser(username, passwordHash, salt):
         return False
 
 
+# Reads one user document by username.
 def getUser(username):
     doc = users.document(username).get()
     return doc.to_dict() if doc.exists else None

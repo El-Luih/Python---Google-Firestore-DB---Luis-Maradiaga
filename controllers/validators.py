@@ -1,5 +1,9 @@
+# Keeps the CLI consistent.
+# Rejects empty input before saving data.
+
+
+# Returns a validator that requires a non-empty field value.
 def required(label):
-    #Returns a parser that rejects blank text and strips spaces.
     def check(text):
         text = text.strip()
         if not text:

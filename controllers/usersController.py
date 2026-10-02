@@ -1,3 +1,7 @@
+# Handles user accounts and login logic.
+# Validates usernames and passwords, hashes them, and stores account info.
+# Keeps auth rules separate from Firestore access.
+
 import hashlib
 import hmac
 import os
@@ -7,10 +11,14 @@ from model import usersModel
 USERNAME_RE = re.compile(r'^[a-z0-9_]{3,20}$')
 
 
+# Password hashing follows a PBKDF2 workflow so stored credentials are not
+# kept as plain text and can be compared safely during login.
+# Hashes a password with a salt using PBKDF2.
 def _hash(password, salt):
     return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 200_000)
 
 
+# Cleans and validates a username.
 def parseUsername(text):
     name = text.strip().lower()
     if not USERNAME_RE.match(name):
@@ -18,16 +26,19 @@ def parseUsername(text):
     return name
 
 
+# Makes sure the password is long enough.
 def parsePassword(text):
     if len(text) < 6:
         raise ValueError('the password must have at least 6 characters.')
     return text
 
 
+# Checks whether a username is still available.
 def isAvailable(username):
     return usersModel.getUser(parseUsername(username)) is None
 
 
+# Registers a new user and stores the hash and salt.
 def register(username, password):
     username = parseUsername(username)
     parsePassword(password)
@@ -38,8 +49,8 @@ def register(username, password):
     return username
 
 
+# Validates login credentials and returns the username on success.
 def login(username, password):
-    #Returns the username (used as the user ID) or raises ValueError.
     generic = ValueError('Invalid username or password.')
     try:
         username = parseUsername(username)

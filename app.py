@@ -1,13 +1,20 @@
+# Course and assignment tracker CLI.
+# Handles menu flow, login/signup, and input prompts.
+# Sends user actions to controller functions without touching Firestore directly.
+
 from getpass import getpass
 from controllers import usersController, coursesController, assignmentController
 from controllers.validators import required
 
 
 class GoBack(Exception):
-    #Raised by any prompt when the user types 'back' or chooses 0.
+    # Raised when the user cancels a nested prompt by typing 'back' or selecting 0.
     pass
 
-# ---------- input helpers ----------
+# ---------- Input helpers ----------
+# These helpers keep the CLI consistent: they capture text, support a shared
+# "back" escape path, and repeatedly ask until the user provides valid input.
+# Prompts the user for text and cancels on back.
 def ask(prompt):
     value = input(f'{prompt} (or "back"): ').strip()
     if value.lower() == 'back':
@@ -15,6 +22,7 @@ def ask(prompt):
     return value
 
 
+# Prompts for a password and cancels on back.
 def askPassword(prompt):
     value = input(f'{prompt} (or "back"): ')
     if value.strip().lower() == 'back':
@@ -22,8 +30,8 @@ def askPassword(prompt):
     return value
 
 
+# Keeps asking until the answer passes validation.
 def askValid(prompt, parse):
-    #Keeps asking the same question until parse() accepts the answer.
     while True:
         try:
             return parse(ask(prompt))
@@ -31,8 +39,8 @@ def askValid(prompt, parse):
             print(f'  Invalid input: {e}')
 
 
+# Lets the user keep the current value by pressing Enter.
 def askKeep(label, current, parse=str):
-    #Edit prompt: pressing Enter keeps the current value (returns None).
     while True:
         text = ask(f'{label} [{current}] - Enter to keep')
         if not text:
@@ -43,6 +51,7 @@ def askKeep(label, current, parse=str):
             print(f'  Invalid input: {e}')
 
 
+# Converts y/n input to a boolean.
 def parseYesNo(text):
     answer = text.lower()
     if answer not in ('y', 'n'):
@@ -50,6 +59,7 @@ def parseYesNo(text):
     return answer == 'y'
 
 
+# Picks a numbered item from a list, with 0 for back.
 def chooseIndex(count, prompt):
     def parse(text):
         if not text.isdigit() or not 0 <= int(text) <= count:
@@ -63,10 +73,12 @@ def chooseIndex(count, prompt):
 
 
 # ---------- pickers ----------
+# Formats an assignment for display in the menu.
 def describe(a):
     return f"{a['title']} ({a['status']}, {a['points']:g} pts, due {a['dueDate']:%Y-%m-%d})"
 
 
+# Lists the user's courses and lets them choose one.
 def pickCourse(user):
     courses = coursesController.getCourses(user)
     if not courses:
@@ -78,6 +90,7 @@ def pickCourse(user):
     return courses[chooseIndex(len(courses), 'Course number')]
 
 
+# Lists assignments for a course and lets the user choose one.
 def pickAssignment(user, course):
     items = assignmentController.getAssignmentsForCourse(user, course['id'])
     if not items:
@@ -89,8 +102,8 @@ def pickAssignment(user, course):
     return items[chooseIndex(len(items), 'Assignment number')]
 
 
+# Keeps selecting a course and assignment until the user picks one or backs out.
 def pickCourseAndAssignment(user):
-    #Back from the assignment list returns to the course list.
     while True:
         course = pickCourse(user)
         try:
@@ -99,14 +112,17 @@ def pickCourseAndAssignment(user):
             continue
 
 
+# Reads a due date using the assignment date validator.
 def readDate():
     return askValid('Due date (YYYY-MM-DD)', assignmentController.parseDate)
 
 
+# Reads and validates a points value.
 def readPoints():
     return askValid('Points', assignmentController.parsePoints)
 
 
+# Shows assignment statuses and lets the user pick one.
 def readStatus():
     statuses = assignmentController.STATUSES
     for i, s in enumerate(statuses, 1):
@@ -115,6 +131,7 @@ def readStatus():
     return statuses[chooseIndex(len(statuses), 'Status')]
 
 
+# Prints a list of assignments with a simple return message.
 def printAssignments(items, emptyMessage='Nothing found.'):
     print()
     if not items:
@@ -133,6 +150,7 @@ AUTH_MENU = """
 """
 
 
+# Runs the login flow until the user enters valid credentials.
 def loginFlow():
     while True:
         username = ask('Username')
@@ -143,6 +161,7 @@ def loginFlow():
             print(f'  {e}')
 
 
+# Creates a new account after checking username and password rules.
 def registerFlow():
     while True:
         username = askValid('Choose a username (3-20 letters, numbers or _)',
@@ -163,8 +182,8 @@ def registerFlow():
     return usersController.register(username, password)
 
 
+# Shows the auth menu and returns the logged-in user or None to quit.
 def authScreen():
-    #Returns the logged-in username, or None if the user quits.
     while True:
         print(AUTH_MENU)
         choice = input('> ').strip()
@@ -204,8 +223,8 @@ MENU = """
 """
 
 
+# Runs the logged-in user's main menu until they log out or quit.
 def runSession(user):
-    #Returns True to log out, False to quit the program.
     while True:
         print(MENU)
         choice = input('> ').strip()
@@ -291,6 +310,7 @@ def runSession(user):
             print(f'Something went wrong: {e}')
 
 
+# Starts the app and loops through login/logout sessions.
 def main():
     while True:
         user = authScreen()
